@@ -1,4 +1,5 @@
 #  ECG Heart Disease Detection System
+![App Screenshot](https://github.com/ansarkp10/Automated-Heart-Disease-Detection-Using-ECG-Image-Analysis/blob/main/ECG_UI.png)
 
 # Overview
 An AI-powered web application for detecting heart diseases from ECG (Electrocardiogram) images using deep learning. The system analyzes uploaded ECG images and provides instant predictions with confidence scores for various cardiac conditions.
