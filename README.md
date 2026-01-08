@@ -1,9 +1,9 @@
 #  ECG Heart Disease Detection System
 
-📋 Overview
+# Overview
 An AI-powered web application for detecting heart diseases from ECG (Electrocardiogram) images using deep learning. The system analyzes uploaded ECG images and provides instant predictions with confidence scores for various cardiac conditions.
 
-🚀 Features
+# Features
 🤖 AI-Powered Analysis
 Multi-Class Detection: Identifies 4+ cardiac conditions
 
@@ -13,7 +13,7 @@ Confidence Scoring: Probability-based predictions
 
 Batch Processing: Upload multiple ECGs simultaneously
 
-👤 User Management
+# User Management
 Secure user registration and authentication
 
 Personalized dashboard with statistics
@@ -22,7 +22,7 @@ Complete ECG history tracking
 
 User profile management
 
-📊 Dashboard & Analytics
+# Dashboard & Analytics
 Activity Visualization: 7-day ECG analysis chart
 
 Health Statistics: Comprehensive cardiac health metrics
@@ -31,7 +31,7 @@ Trend Analysis: Longitudinal ECG pattern tracking
 
 Export Options: CSV, JSON, and PDF reports
 
-🔧 Technical Features
+# Technical Features
 Responsive Design: Mobile-friendly interface
 
 Secure File Upload: Validated ECG image processing
@@ -40,7 +40,7 @@ Background Processing: Non-blocking AI analysis
 
 RESTful API: JSON endpoints for integration
 
-🏗️ System Architecture
+# System Architecture
 Tech Stack
 Backend: Django 6.0, Python 3.12
 
