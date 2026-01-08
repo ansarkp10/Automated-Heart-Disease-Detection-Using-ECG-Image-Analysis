@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}ECG Results - ECG Analyzer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    
+    .probability-bar {
+        height: 25px;
+        background: #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .probability-fill {
+        height: 100%;
+        border-radius: 12px;
+        transition: width 1s ease-in-out;
+        position: relative;
+    }
+    
+    .probability-label {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-weight: 600;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .probability-value {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-weight: 600;
+    }
+    
+    .diagnosis-badge {
+        font-size: 1.1rem;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    .similar-ecg {
+        border-left: 4px solid;
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .similar-ecg.normal {
+        border-left-color: #10b981;
+    }
+    
+    .similar-ecg.abnormal {
+        border-left-color: #f59e0b;
+    }
+    
+    .similar-ecg.mi {
+        border-left-color: #ef4444;
+    }
+    
+    .similar-ecg.post_mi {
+        border-left-color: #8b5cf6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Result Summary -->
+            <div class="result-card">
+                <div class="row align-items-center mb-4">
+                    <div class="col-md-8">
+                        <h1 class="mb-3">
+                            <i class="fas fa-clipboard-check me-2"></i>ECG Analysis Results
+                        </h1>
+                        <p class="text-muted mb-0">
+                            Analysis completed on {{ record.upload_date|date:"F d, Y H:i" }}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <span class="badge diagnosis-badge bg-{% if record.predicted_category == 'normal' %}success{% elif record.predicted_category == 'abnormal' %}warning{% else %}danger{% endif %}">
+                            {{ record.get_predicted_category_display }}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Confidence Score -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="mb-0">Confidence Score</h5>
+                        <h4 class="mb-0 text-{% if record.confidence > 90 %}success{% elif record.confidence > 70 %}warning{% else %}danger{% endif %}">
+                            {{ record.confidence|floatformat:1 }}%
+                        </h4>
+                    </div>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar progress-bar-striped" 
+                             style="width: {{ record.confidence }}%; background: linear-gradient(90deg, 
+                             {% if record.confidence > 90 %}#10b981{% elif record.confidence > 70 %}#f59e0b{% else %}#ef4444{% endif %}, 
+                             {% if record.confidence > 90 %}#34d399{% elif record.confidence > 70 %}#fbbf24{% else %}#f87171{% endif %});">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ECG Image -->
+                <div class="mb-4">
+                    <h5 class="mb-3">ECG Image</h5>
+                    <div class="text-center">
+                        <img src="{{ record.image.url }}" 
+                             alt="ECG Image" 
+                             class="img-fluid rounded shadow"
+                             style="max-height: 400px;">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Probability Distribution -->
+            <div class="result-card">
+                <h4 class="mb-4">
+                    <i class="fas fa-chart-pie me-2"></i>Probability Distribution
+                </h4>
+                
+                {% for category, prob in probabilities.items %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-medium">{{ category }}</span>
+                        <span class="fw-bold">{{ prob|floatformat:2 }}%</span>
+                    </div>
+                    <div class="probability-bar">
+                        <div class="probability-fill" 
+                             style="width: {{ prob }}%; background: linear-gradient(90deg,
+                             {% if category == 'Normal' %}#10b981{% endif %}
+                             {% if category == 'Abnormal Heartbeat' %}#f59e0b{% endif %}
+                             {% if category == 'Myocardial Infarction' %}#ef4444{% endif %}
+                             {% if category == 'Post MI History' %}#8b5cf6{% endif %},
+                             {% if category == 'Normal' %}#34d399{% endif %}
+                             {% if category == 'Abnormal Heartbeat' %}#fbbf24{% endif %}
+                             {% if category == 'Myocardial Infarction' %}#f87171{% endif %}
+                             {% if category == 'Post MI History' %}#a78bfa{% endif %});">
+                            <span class="probability-label">{{ category }}</span>
+                            <span class="probability-value">{{ prob|floatformat:1 }}%</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Notes -->
+            {% if record.notes %}
+            <div class="result-card">
+                <h4 class="mb-3">
+                    <i class="fas fa-sticky-note me-2"></i>Notes
+                </h4>
+                <div class="bg-light p-3 rounded">
+                    {{ record.notes|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Actions -->
+            <div class="result-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-cogs me-2"></i>Actions
+                </h5>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'upload' %}" class="btn btn-primary">
+                        <i class="fas fa-upload me-2"></i>Upload Another ECG
+                    </a>
+                    <a href="{% url 'history' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-history me-2"></i>View All Records
+                    </a>
+                    <button class="btn btn-outline-secondary" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>Print Report
+                    </button>
+                    <a href="{{ record.image.url }}" 
+                       class="btn btn-outline-info" 
+                       download="ecg_{{ record.id }}.jpg">
+                        <i class="fas fa-download me-2"></i>Download Image
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Similar ECGs -->
+            {% if similar_records %}
+            <div class="result-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-heartbeat me-2"></i>Similar ECGs
+                </h5>
+                <div class="similar-ecgs">
+                    {% for similar in similar_records %}
+                    <div class="similar-ecg {{ similar.predicted_category }}">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-1">ECG #{{ similar.id }}</h6>
+                            <small class="text-muted">{{ similar.upload_date|date:"M d" }}</small>
+                        </div>
+                        <p class="mb-1 small">
+                            Confidence: {{ similar.confidence|floatformat:1 }}%
+                        </p>
+                        <a href="{% url 'ecg_result' similar.id %}" class="small">
+                            View Details <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Information -->
+            <div class="result-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-info-circle me-2"></i>About This Diagnosis
+                </h5>
+                <div class="alert alert-{% if record.predicted_category == 'normal' %}success{% elif record.predicted_category == 'abnormal' %}warning{% else %}danger{% endif %}">
+                    {% if record.predicted_category == 'normal' %}
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Normal ECG:</strong> No significant abnormalities detected.
+                    {% elif record.predicted_category == 'abnormal' %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Abnormal Heartbeat:</strong> Irregular heart rhythm detected.
+                    {% elif record.predicted_category == 'mi' %}
+                    <i class="fas fa-heart-crack me-2"></i>
+                    <strong>Myocardial Infarction:</strong> Signs of heart attack detected.
+                    {% else %}
+                    <i class="fas fa-history me-2"></i>
+                    <strong>Post MI History:</strong> Previous heart attack detected.
+                    {% endif %}
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Important Notice
+                    </h6>
+                    <p class="small mb-0">
+                        This analysis is generated by an AI model and is for informational purposes only.
+                        Always consult with a healthcare professional for medical advice.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Animate probability bars
+    $('.probability-fill').each(function() {
+        const width = $(this).css('width');
+        $(this).css('width', '0');
+        setTimeout(() => {
+            $(this).animate({width: width}, 1000);
+        }, 500);
+    });
+    
+    // Generate shareable link
+    const shareUrl = window.location.href;
+    const shareText = `My ECG Analysis: ${$('.diagnosis-badge').text()} with ${$('.progress-bar').css('width')} confidence`;
+});
+</script>
+{% endblock %}
